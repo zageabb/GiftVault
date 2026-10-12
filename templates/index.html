@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GiftVault</title><style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#22322d;background:#f6f8f6}
+body{margin:0}header{background:#164b3c;color:white;padding:1rem 1.4rem;display:flex;justify-content:space-between;align-items:center}
+main{max-width:1100px;margin:auto;padding:1rem}h1{margin:.2rem 0}h2{font-size:1.15rem}
+section,.gift{background:white;border:1px solid #dde8df;border-radius:14px;padding:1rem;margin:1rem 0}
+form{display:flex;flex-wrap:wrap;gap:.6rem;align-items:end}label{display:flex;flex-direction:column;gap:.25rem;font-size:.88rem}
+input,select,textarea,button{font:inherit;padding:.6rem;border:1px solid #aabbaf;border-radius:8px;max-width:100%;box-sizing:border-box}
+button{background:#166249;color:white;border:0;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.8rem}
+.gift{margin:0;min-width:0}.gift img{width:100%;height:180px;object-fit:cover;border-radius:9px}
+.muted{color:#576b60;font-size:.9rem}.money{font-weight:700}.pill{background:#e4eee8;padding:.2rem .5rem;border-radius:20px;font-size:.8rem}
+details{margin-top:.7rem}summary{cursor:pointer;font-weight:600}footer{padding:1rem;text-align:center;color:#576b60}
+@media(max-width:550px){header{align-items:flex-start;gap:.4rem}form{flex-direction:column;align-items:stretch}label{width:100%}}
+</style></head><body><header><div><h1>🎁 GiftVault</h1><small>Christmas gift planner</small></div><span>{{ user }}</span></header>
+<main>
+<section><h2>Christmas {{year}} · £{{"%.2f"|format(total)}} spent (visible gifts only)</h2>
+<form method="get"><label>Christmas year <input name="year" type="number" min="2020" max="2100" value="{{year}}"></label><button>View year</button></form></section>
+<section><h2>Add recipient</h2><form action="{{url_for('add_recipient')}}" method="post">
+<label>Name <input required name="name" maxlength="100" placeholder="Recipient name"></label><button>Add recipient</button></form></section>
+<section><h2>Add gift</h2><p class="muted">Gifts are private by default. Only you can choose to share one.</p>
+<form action="{{url_for('add_gift')}}" method="post"><input type="hidden" name="year" value="{{year}}">
+<label>Recipient <select name="recipient_id" required>{% for p in recipients %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}</select></label>
+<label>Gift <input name="title" maxlength="200" required placeholder="Gift description"></label>
+<label>Status <select name="status">{% for s in statuses %}<option value="{{s}}">{{s|title}}</option>{% endfor %}</select></label>
+<label>Estimated £ <input name="estimated" inputmode="decimal" placeholder="0.00"></label>
+<label>Actual £ <input name="actual" inputmode="decimal" placeholder="0.00"></label>
+<label>Visibility <select name="visibility"><option value="private">Private to me</option><option value="shared">Shared with both</option></select></label>
+<label>Notes <textarea name="notes" maxlength="4000"></textarea></label>
+<button {% if not recipients %}disabled{% endif %}>Save gift</button></form></section>
+<h2>Visible gifts ({{gifts|length}})</h2><div class="grid">{% for item in gifts %}
+<article class="gift">
+{% if item.photo_name %}<img loading="lazy" src="{{url_for('get_photo',gift_id=item.id)}}" alt="Photo of {{item.title}}">{% endif %}
+<h3>{{item.title}}</h3><p class="muted">{{item.recipient_name}} · <span class="pill">{{item.status|title}}</span> · {{item.visibility|title}}</p>
+<p class="money">Estimated £{{"%.2f"|format(item.estimated_pence/100)}} · Paid £{{"%.2f"|format(item.actual_pence/100)}}</p>
+{% if item.notes %}<p>{{item.notes}}</p>{% endif %}
+{% if item.creator == user %}
+<details><summary>Edit gift</summary>
+<form action="{{url_for('change_status',gift_id=item.id)}}" method="post"><label>Status <select name="status">{% for s in statuses %}<option value="{{s}}" {% if item.status==s %}selected{% endif %}>{{s|title}}</option>{% endfor %}</select></label><button>Update</button></form>
+<form action="{{url_for('change_visibility',gift_id=item.id)}}" method="post"><label>Visibility <select name="visibility"><option value="private" {% if item.visibility=='private' %}selected{% endif %}>Private</option><option value="shared" {% if item.visibility=='shared' %}selected{% endif %}>Shared</option></select></label><button>Update</button></form>
+<form action="{{url_for('upload_photo',gift_id=item.id)}}" method="post" enctype="multipart/form-data">
+<label>Take photo / choose from library <input type="file" name="photo" accept="image/*" capture="environment" required></label><button>Upload photo</button></form>
+</details>{% endif %}
+</article>{% else %}<p>No gifts visible for this year.</p>{% endfor %}</div>
+</main><footer>Private gifts are excluded from other accounts' views and totals.</footer></body></html>
