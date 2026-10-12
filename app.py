@@ -79,10 +79,6 @@ def create_app(config=None):
             abort(403)
         g.user = username
 
-    def token():
-        if request.form.get("_csrf") != g.csrf:
-            abort(403)
-
     # Stateless CSRF with HTTP Origin verification: browser form submits must
     # supply a matching origin or referer; rejected when missing.
     @app.before_request
@@ -93,8 +89,11 @@ def create_app(config=None):
         origin = request.headers.get("Origin") or request.headers.get("Referer")
         if not origin:
             abort(403)
-        a, b = urlsplit(origin), urlsplit(request.host_url)
-        if (a.scheme, a.netloc) != (b.scheme, b.netloc):
+        a = urlsplit(origin)
+        # Forwarded host/protocol are accepted ONLY after the trusted-peer check.
+        expected_scheme = request.headers.get("X-Forwarded-Proto", request.scheme).split(",")[0].strip()
+        expected_host = request.headers.get("X-Forwarded-Host", request.host).split(",")[0].strip()
+        if (a.scheme, a.netloc) != (expected_scheme, expected_host):
             abort(403)
 
     @app.context_processor
