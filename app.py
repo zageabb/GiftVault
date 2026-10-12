@@ -33,7 +33,7 @@ def create_app(config=None):
     app.wsgi_app = ForwardedPrefixMiddleware(app.wsgi_app)
     app.config.update(
         DATA_DIR=os.environ.get("GIFT_DATA_DIR", ".local-data"),
-        AUTH_HEADER=os.environ.get("GIFT_AUTH_HEADER", "X-Authenticated-User"),
+        AUTH_HEADER=os.environ.get("GIFT_AUTH_HEADER", "X-UDA-User"),
         TRUSTED_PROXY_IPS=os.environ.get("GIFT_TRUSTED_PROXY_IPS", ""),
         USERS=os.environ.get("GIFT_USERS", ""),
         MAX_CONTENT_LENGTH=10 * 1024 * 1024,
