@@ -15,8 +15,22 @@ MAX_PHOTO_BYTES = 8 * 1024 * 1024
 PHOTO_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 
 
+class ForwardedPrefixMiddleware:
+    """Apply UDA's externally visible path prefix before Flask builds URLs."""
+
+    def __init__(self, application):
+        self.application = application
+
+    def __call__(self, environ, start_response):
+        prefix = environ.get("HTTP_X_FORWARDED_PREFIX", "").rstrip("/")
+        if prefix.startswith("/") and "//" not in prefix and "\\" not in prefix:
+            environ["SCRIPT_NAME"] = prefix
+        return self.application(environ, start_response)
+
+
 def create_app(config=None):
     app = Flask(__name__)
+    app.wsgi_app = ForwardedPrefixMiddleware(app.wsgi_app)
     app.config.update(
         DATA_DIR=os.environ.get("GIFT_DATA_DIR", ".local-data"),
         AUTH_HEADER=os.environ.get("GIFT_AUTH_HEADER", "X-Authenticated-User"),
@@ -65,6 +79,8 @@ def create_app(config=None):
 
     @app.before_request
     def authenticate():
+        if request.endpoint == "health":
+            return
         try:
             peer = ipaddress.ip_address(request.remote_addr)
             trusted = {ipaddress.ip_address(v.strip()) for v in app.config["TRUSTED_PROXY_IPS"].split(",") if v.strip()}
@@ -78,6 +94,10 @@ def create_app(config=None):
         if not username or username not in allowed:
             abort(403)
         g.user = username
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}
 
     # Stateless CSRF with HTTP Origin verification: browser form submits must
     # supply a matching origin or referer; rejected when missing.

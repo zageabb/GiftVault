@@ -7,7 +7,7 @@
 - [x] Recipient, gift, status and visibility forms
 - [x] Browser camera/library upload with server-side photo re-encoding
 - [x] Protected image download, no-store response headers
-- [ ] Verify real reverse-proxy auth integration and request topology in Ubuntu
+- [x] Verify real reverse-proxy auth integration and request topology in Ubuntu
 - [ ] Run test suite in CI and smoke-test on Android Chrome and iPhone Safari
 
 ## Phase 2 — Usability and tracking
@@ -20,7 +20,7 @@
 
 ## Phase 3 — Operations
 - [ ] Automated backup/restore of SQLite and photo files
-- [ ] UDA manifest based on actual live deployment conventions
+- [x] UDA registry entry based on the live Ubuntu deployment conventions
 - [ ] Harden image formats, file quotas, upload errors and concurrency
 - [ ] Review proxy header behaviour (overwrite/remove spoofed identity headers)
 - [ ] Confirm permission leakage tests for search, summary and future endpoints

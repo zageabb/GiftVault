@@ -18,6 +18,20 @@ def test_identity_required(client):
     assert client.get("/").status_code==403
     assert client.get("/",headers=headers("unknown")).status_code==403
 
+def test_health_does_not_require_identity(client):
+    assert client.get("/health").get_json()=={"status":"ok"}
+
+def test_uda_forwarded_prefix_is_used_for_links_and_redirects(client):
+    prefixed={**headers(),"X-Forwarded-Prefix":"/apps/giftvault"}
+    page=client.get("/",headers=prefixed)
+    assert b'action="/apps/giftvault/recipients"' in page.data
+    response=client.post(
+        "/recipients",
+        data={"name":"Tanya"},
+        headers={**prefixed,"Origin":"http://localhost"},
+    )
+    assert response.headers["Location"]=="/apps/giftvault/"
+
 def test_private_gifts_invisible_in_totals(client):
     assert post(client,"/recipients",{"name":"Tanya"}).status_code==302
     assert post(client,"/gifts",{"recipient_id":"1","year":"2026","title":"Secret surprise","actual":"150","visibility":"private"}).status_code==302
