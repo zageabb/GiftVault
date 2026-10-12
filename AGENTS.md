@@ -1,0 +1,11 @@
+# Agent development rules
+- Keep private gift existence invisible to any account other than its creator.
+- Every query and attachment endpoint must enforce visibility **before** returning data.
+- Do not leak hidden counts, totals, status, identifiers, prices, notes or metadata.
+- New gifts must default to private. Sharing always requires explicit selection.
+- Never accept a user identity directly from an untrusted browser header. Verify a trusted reverse-proxy peer and a configured allowlist for every request.
+- Do not expose the Flask service directly to the internet.
+- Never commit real gift data, photos, backups or authentication credentials.
+- Keep data in GIFT_DATA_DIR, separate from deployments.
+- Add tests whenever changing authentication, visibility or image access.
+- Update DEVELOPMENT.md for any newly completed or deferred features.
