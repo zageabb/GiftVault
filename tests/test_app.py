@@ -9,7 +9,7 @@ def client(tmp_path):
     return app.test_client()
 
 def headers(user="gez"):
-    return {"X-Authenticated-User":user}
+    return {"X-UDA-User":user}
 
 def post(client,path, data, user="gez"):
     return client.post(path,data=data,headers={**headers(user),"Origin":"http://localhost"})
