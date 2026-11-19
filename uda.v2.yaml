@@ -1,0 +1,42 @@
+# V2 review candidate; no activation authority
+schema_version: 2
+application:
+  name: giftvault
+  kind: web
+  display_name: "GiftVault"
+  group: "Open"
+source:
+  branch: main
+  repository: "zageabb/GiftVault"
+builds:
+  - name: build
+    toolchain: python
+    working_dir: "."
+    commands:
+      - ["python","-m","pip","install","-r","requirements.txt"]
+services:
+  - name: web
+    role: web
+    runtime: python
+    runtime_version: "3.10.12"
+    working_dir: "."
+    entrypoint: ["gunicorn","--bind","127.0.0.1:5090","--workers","2","--threads","2","--access-logfile","-","--error-logfile","-","app:create_app()"]
+    port: 5090
+    health:
+      type: http
+      path: "/health"
+    restart: on-failure
+    required_builds: [build]
+proxy:
+  enabled: true
+  upstream: web
+  canonical_path: /apps/giftvault/
+  authentication: uda
+environment:
+  required: ["GIFT_AUTH_HEADER","GIFT_DATA_DIR","GIFT_TRUSTED_PROXY_IPS","GIFT_USERS"]
+deployment:
+  strategy: systemd
+  approval: explicit
+  auto_update: false
+  rollback: true
+  github_reporting: false
